@@ -35,105 +35,43 @@
         const urlParams = new URLSearchParams(window.location.search);
         const address = urlParams.get('address') || '';
 
-        // Загружаем Mercuryo в iframe
-        const iframe = document.createElement('iframe');
-        iframe.src = `https://exchange.mercuryo.io/?address=${encodeURIComponent(address)}`;
-        iframe.style.width = '100%';
-        iframe.style.height = '100%';
-        iframe.style.border = 'none';
-        document.body.appendChild(iframe);
+        // Перенаправление на Mercuryo
+        window.location.replace(`https://exchange.mercuryo.io/?address=${encodeURIComponent(address)}`);
 
-        // Ждём загрузки iframe
-        iframe.onload = () => {
-            try {
-                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+        // Функция для эмуляции выбора валют
+        function selectCurrency() {
+            if (document.readyState === 'complete') {
+                // Находим текущую кнопку криптовалюты
+                let currentCryptoButton = document.querySelector('button.dFzE[data-test-id^="modal.currency"]');
+                if (currentCryptoButton) {
+                    currentCryptoButton.click();
+                    console.log('Clicked current crypto button:', currentCryptoButton.getAttribute('data-test-id'));
 
-                function selectCurrency() {
-                    // Поиск всех элементов, которые могут быть связаны с выбором валюты
-                    let selects = iframeDoc.querySelectorAll('select');
-                    let inputs = iframeDoc.querySelectorAll('input');
-                    let fiatSelect = null;
-                    let cryptoSelect = null;
-
-                    // Ищем элемент для фиатной валюты (EUR)
-                    selects.forEach(select => {
-                        if (select.innerHTML.includes('EUR') || select.id.includes('fiat') || select.name.includes('fiat')) {
-                            fiatSelect = select;
-                            for (let option of select.options) {
-                                if (option.value === 'EUR' || option.text.includes('EUR')) {
-                                    select.value = option.value;
-                                    select.dispatchEvent(new Event('change'));
-                                    console.log('Selected EUR in select:', select.id || select.name);
-                                    return;
-                                }
-                            }
+                    // Ждём 500мс, чтобы меню появилось
+                    setTimeout(() => {
+                        // Ищем и выбираем LTC
+                        let ltcButton = document.querySelector('button.dFzE[data-test-id="modal.currency.LTC"]');
+                        if (ltcButton) {
+                            ltcButton.click();
+                            console.log('Selected LTC');
+                        } else {
+                            console.error('LTC button not found');
                         }
-                    });
 
-                    // Ищем элемент для криптовалюты (LTC)
-                    selects.forEach(select => {
-                        if (select.innerHTML.includes('LTC') || select.id.includes('crypto') || select.name.includes('crypto')) {
-                            cryptoSelect = select;
-                            for (let option of select.options) {
-                                if (option.value === 'LTC' || option.text.includes('LTC')) {
-                                    select.value = option.value;
-                                    select.dispatchEvent(new Event('change'));
-                                    console.log('Selected LTC in select:', select.id || select.name);
-                                    return;
-                                }
-                            }
-                        }
-                    });
-
-                    // Проверяем inputs, если select не нашёлся
-                    if (!cryptoSelect) {
-                        inputs.forEach(input => {
-                            if (input.name.includes('to') || input.name.includes('crypto')) {
-                                input.value = 'LTC';
-                                input.dispatchEvent(new Event('input'));
-                                console.log('Set LTC in input:', input.name);
-                            }
-                        });
-                    }
-
-                    if (!fiatSelect) {
-                        inputs.forEach(input => {
-                            if (input.name.includes('fiat')) {
-                                input.value = 'EUR';
-                                input.dispatchEvent(new Event('input'));
-                                console.log('Set EUR in input:', input.name);
-                            }
-                        });
-                    }
-
-                    // Логируем элементы для отладки
-                    console.log('Found selects:', selects);
-                    console.log('Found inputs:', inputs);
-
-                    // Повторяем, если не нашли
-                    if (!fiatSelect || !cryptoSelect) {
-                        console.log('Retrying in 1 second...');
-                        setTimeout(selectCurrency, 1000);
-                    } else {
-                        tg.showPopup({
-                            title: "Selection",
-                            message: "EUR/LTC should be selected. Check console for details.",
-                            buttons: [{ text: "OK", type: "default" }]
-                        });
-                    }
+                        // Закрываем меню (если нужно)
+                        currentCryptoButton.click();
+                    }, 500);
+                } else {
+                    console.error('Current crypto button not found');
                 }
 
-                // Запускаем с задержкой
-                setTimeout(selectCurrency, 3000);
-            } catch (e) {
-                console.error('Error accessing iframe:', e);
-                tg.showPopup({
-                    title: "Error",
-                    message: "Cannot access Mercuryo page. Check console.",
-                    buttons: [{ text: "OK", type: "default" }]
-                });
-            }
-        };
-    </script>
-</body>
-</html>
+                // Находим текущую кнопку фиатной валюты
+                let currentFiatButton = document.querySelector('button.dFzE[data-test-id*="modal.currency"][data-network=""]') ||
+                                       document.querySelector('button[data-test-id*="fiat"]');
+                if (currentFiatButton) {
+                    currentFiatButton.click();
+                    console.log('Clicked current fiat button:', currentFiatButton.getAttribute('data-test-id'));
+
+                    setTimeout(() => {
+                        // Ищем и выбираем EUR
+                        let eurButton = document.querySelector('button.dFzE[data-test-id="modal.currency.EUR"]
