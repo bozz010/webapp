@@ -31,32 +31,74 @@
         tg.ready();
         tg.expand(); // Разворачиваем на полный экран
 
-        // Получаем адрес из параметров URL (передаётся из my_profile.py)
+        // Получаем адрес из параметров URL
         const urlParams = new URLSearchParams(window.location.search);
         const address = urlParams.get('address') || '';
 
-        // Параметры для Mercuryo
-        const params = new URLSearchParams({
-            fiat_currency: "EUR", // Фиатная валюта
-            to: "LTC", // Криптовалюта
-            network: "litecoin", // Сеть для LTC
-            widget_id: "67710925-5840-4767-846e-3b8d8b69f04d", // Замени на свой widget_id
-            address: address // Адрес депозита
-        });
+        // Перенаправление на Mercuryo с минимальными параметрами
+        const mercuryoUrl = `https://exchange.mercuryo.io/?fiat_currency=EUR&address=${encodeURIComponent(address)}`;
+        window.location.replace(mercuryoUrl);
 
-        // Перенаправление на Mercuryo с параметрами
-        window.location.replace(`https://exchange.mercuryo.io/?${params.toString()}`);
-
-        // Таймаут на случай, если перенаправление не сработает
+        // Таймаут для загрузки страницы и выполнения JavaScript
         setTimeout(() => {
+            // Функция для поиска и выбора LTC
+            function selectLTC() {
+                // Пробуем найти выпадающее меню или поле с криптовалютой
+                let cryptoSelect = document.querySelector('select[name="crypto"]') || // Общий случай
+                                  document.querySelector('select[id*="crypto"]') || // Поиск по ID
+                                  document.querySelector('input[name="to"]'); // Или поле ввода
+
+                if (cryptoSelect) {
+                    if (cryptoSelect.tagName === 'SELECT') {
+                        // Если это выпадающий список
+                        for (let option of cryptoSelect.options) {
+                            if (option.value.toUpperCase() === 'LTC' || option.text.toUpperCase().includes('LTC')) {
+                                cryptoSelect.value = option.value;
+                                cryptoSelect.dispatchEvent(new Event('change')); // Симулируем изменение
+                                console.log('Selected LTC');
+                                return;
+                            }
+                        }
+                    } else if (cryptoSelect.tagName === 'INPUT') {
+                        // Если это поле ввода
+                        cryptoSelect.value = 'LTC';
+                        cryptoSelect.dispatchEvent(new Event('input')); // Симулируем ввод
+                        console.log('Set LTC in input');
+                        return;
+                    }
+                } else {
+                    console.error('Crypto selector not found');
+                }
+
+                // Если не нашли, пробуем через родительский элемент
+                let cryptoContainer = document.querySelector('div[class*="crypto"]') ||
+                                     document.querySelector('div[id*="crypto"]');
+                if (cryptoContainer) {
+                    let inputs = cryptoContainer.getElementsByTagName('input');
+                    for (let input of inputs) {
+                        if (input.value.toUpperCase().includes('BTC')) {
+                            input.value = 'LTC';
+                            input.dispatchEvent(new Event('input'));
+                            console.log('Replaced BTC with LTC');
+                            return;
+                        }
+                    }
+                }
+
+                // Если ничего не сработало, повторяем через 1 секунду
+                setTimeout(selectLTC, 1000);
+            }
+
+            // Запускаем функцию после загрузки страницы
+            selectLTC();
+
+            // Показываем попап, если что-то пошло не так
             tg.showPopup({
-                title: "Redirect Issue",
-                message: "If you are not redirected, please click OK to open Mercuryo manually.",
+                title: "Selection Issue",
+                message: "If LTC is not selected, check console for errors or retry.",
                 buttons: [{ text: "OK", type: "default" }]
-            }, () => {
-                window.location.href = `https://exchange.mercuryo.io/?${params.toString()}`;
             });
-        }, 2000);
+        }, 2000); // Ждём 2 секунды, чтобы страница подгрузилась
     </script>
 </body>
 </html>
