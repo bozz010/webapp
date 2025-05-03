@@ -41,37 +41,78 @@
         // Функция для эмуляции выбора валют
         function selectCurrency() {
             if (document.readyState === 'complete') {
-                // Находим текущую кнопку криптовалюты
-                let currentCryptoButton = document.querySelector('button.dFzE[data-test-id^="modal.currency"]');
-                if (currentCryptoButton) {
-                    currentCryptoButton.click();
-                    console.log('Clicked current crypto button:', currentCryptoButton.getAttribute('data-test-id'));
+                // Выбор криптовалюты (LTC)
+                let cryptoSelectButton = document.querySelector('button.EIZxX[data-testid="toAmountCurrencySelect"]');
+                if (cryptoSelectButton) {
+                    cryptoSelectButton.click();
+                    console.log('Clicked crypto selector button');
 
                     // Ждём 500мс, чтобы меню появилось
                     setTimeout(() => {
-                        // Ищем и выбираем LTC
-                        let ltcButton = document.querySelector('button.dFzE[data-test-id="modal.currency.LTC"]');
+                        let ltcButton = document.querySelector('button.dFzfE[data-testid="modal_currency_LTC"]');
                         if (ltcButton) {
                             ltcButton.click();
                             console.log('Selected LTC');
                         } else {
                             console.error('LTC button not found');
                         }
-
-                        // Закрываем меню (если нужно)
-                        currentCryptoButton.click();
                     }, 500);
                 } else {
-                    console.error('Current crypto button not found');
+                    console.error('Crypto selector button not found');
                 }
 
-                // Находим текущую кнопку фиатной валюты
-                let currentFiatButton = document.querySelector('button.dFzE[data-test-id*="modal.currency"][data-network=""]') ||
-                                       document.querySelector('button[data-test-id*="fiat"]');
-                if (currentFiatButton) {
-                    currentFiatButton.click();
-                    console.log('Clicked current fiat button:', currentFiatButton.getAttribute('data-test-id'));
+                // Выбор фиатной валюты (EUR)
+                let fiatSelectButton = document.querySelector('button.EIZxX[data-testid="fromAmountCurrencySelect"]');
+                if (fiatSelectButton) {
+                    fiatSelectButton.click();
+                    console.log('Clicked fiat selector button');
 
                     setTimeout(() => {
-                        // Ищем и выбираем EUR
-                        let eurButton = document.querySelector('button.dFzE[data-test-id="modal.currency.EUR"]
+                        let eurButton = document.querySelector('button.dFzfE[data-testid="modal_currency_EUR"]');
+                        if (eurButton) {
+                            eurButton.click();
+                            console.log('Selected EUR');
+                        } else {
+                            console.error('EUR button not found');
+                        }
+                    }, 500);
+                } else {
+                    console.error('Fiat selector button not found');
+                }
+
+                // Логируем элементы для отладки
+                console.log('Crypto select button:', cryptoSelectButton);
+                console.log('Fiat select button:', fiatSelectButton);
+
+                // Повторяем, если не нашли
+                if (!cryptoSelectButton || !fiatSelectButton) {
+                    console.log('Retrying in 1 second...');
+                    setTimeout(selectCurrency, 1000);
+                } else {
+                    tg.showPopup({
+                        title: "Selection",
+                        message: "Check if EUR/LTC is selected. See console for details.",
+                        buttons: [{ text: "OK", type: "default" }]
+                    });
+                }
+            } else {
+                setTimeout(selectCurrency, 500);
+            }
+        }
+
+        // Запускаем функцию после перенаправления
+        setTimeout(selectCurrency, 2000);
+
+        // Таймаут на случай, если перенаправление не сработает
+        setTimeout(() => {
+            tg.showPopup({
+                title: "Redirect Issue",
+                message: "If you are not redirected, click OK to open Mercuryo manually.",
+                buttons: [{ text: "OK", type: "default" }]
+            }, () => {
+                window.location.href = `https://exchange.mercuryo.io/?address=${encodeURIComponent(address)}`;
+            });
+        }, 3000);
+    </script>
+</body>
+</html>
