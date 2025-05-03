@@ -39,7 +39,17 @@
         window.location.replace(`https://exchange.mercuryo.io/?address=${encodeURIComponent(address)}`);
 
         // Функция для эмуляции выбора валют
-        function selectCurrency() {
+        function selectCurrency(attempt = 1) {
+            if (attempt > 5) {
+                console.error('Max attempts reached. Could not select currencies.');
+                tg.showPopup({
+                    title: "Selection Failed",
+                    message: "Could not select EUR/LTC. Please select manually.",
+                    buttons: [{ text: "OK", type: "default" }]
+                });
+                return;
+            }
+
             if (document.readyState === 'complete') {
                 // Выбор криптовалюты (LTC)
                 let cryptoSelectButton = document.querySelector('button.EIZxX[data-testid="toAmountCurrencySelect"]');
@@ -47,18 +57,18 @@
                     cryptoSelectButton.click();
                     console.log('Clicked crypto selector button');
 
-                    // Ждём 500мс, чтобы меню появилось
+                    // Ждём 1000мс, чтобы меню появилось
                     setTimeout(() => {
                         let ltcButton = document.querySelector('button.dFzfE[data-testid="modal_currency_LTC"]');
                         if (ltcButton) {
                             ltcButton.click();
                             console.log('Selected LTC');
                         } else {
-                            console.error('LTC button not found');
+                            console.error('LTC button not found on attempt', attempt);
                         }
-                    }, 500);
+                    }, 1000);
                 } else {
-                    console.error('Crypto selector button not found');
+                    console.error('Crypto selector button not found on attempt', attempt);
                 }
 
                 // Выбор фиатной валюты (EUR)
@@ -73,35 +83,41 @@
                             eurButton.click();
                             console.log('Selected EUR');
                         } else {
-                            console.error('EUR button not found');
+                            console.error('EUR button not found on attempt', attempt);
                         }
-                    }, 500);
+                    }, 1000);
                 } else {
-                    console.error('Fiat selector button not found');
+                    console.error('Fiat selector button not found on attempt', attempt);
                 }
 
                 // Логируем элементы для отладки
-                console.log('Crypto select button:', cryptoSelectButton);
-                console.log('Fiat select button:', fiatSelectButton);
+                console.log('Attempt', attempt, '- Crypto select button:', cryptoSelectButton);
+                console.log('Attempt', attempt, '- Fiat select button:', fiatSelectButton);
 
-                // Повторяем, если не нашли
-                if (!cryptoSelectButton || !fiatSelectButton) {
-                    console.log('Retrying in 1 second...');
-                    setTimeout(selectCurrency, 1000);
-                } else {
-                    tg.showPopup({
-                        title: "Selection",
-                        message: "Check if EUR/LTC is selected. See console for details.",
-                        buttons: [{ text: "OK", type: "default" }]
-                    });
-                }
+                // Проверяем, выбраны ли валюты
+                setTimeout(() => {
+                    let selectedCrypto = document.querySelector('button.EIZxX[data-testid="toAmountCurrencySelect"] span')?.textContent;
+                    let selectedFiat = document.querySelector('button.EIZxX[data-testid="fromAmountCurrencySelect"] span')?.textContent;
+
+                    if (selectedCrypto === 'LTC' && selectedFiat === 'EUR') {
+                        tg.showPopup({
+                            title: "Selection Success",
+                            message: "EUR/LTC is selected!",
+                            buttons: [{ text: "OK", type: "default" }]
+                        });
+                    } else {
+                        console.log('Retrying in 2 seconds... Current selection - Crypto:', selectedCrypto, 'Fiat:', selectedFiat);
+                        setTimeout(() => selectCurrency(attempt + 1), 2000);
+                    }
+                }, 2000);
             } else {
-                setTimeout(selectCurrency, 500);
+                console.log('Document not ready, retrying in 1 second...');
+                setTimeout(() => selectCurrency(attempt), 1000);
             }
         }
 
         // Запускаем функцию после перенаправления
-        setTimeout(selectCurrency, 2000);
+        setTimeout(selectCurrency, 3000);
 
         // Таймаут на случай, если перенаправление не сработает
         setTimeout(() => {
@@ -112,7 +128,7 @@
             }, () => {
                 window.location.href = `https://exchange.mercuryo.io/?address=${encodeURIComponent(address)}`;
             });
-        }, 3000);
+        }, 5000);
     </script>
 </body>
 </html>
