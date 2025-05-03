@@ -31,8 +31,8 @@
         tg.ready();
         tg.expand(); // Разворачиваем на полный экран
 
-        // Перенаправление на Mercuryo
-        window.location.replace("https://exchange.mercuryo.io/");
+        // Перенаправление на Mercuryo с параметрами EUR/USDT (TRC-20)
+        window.location.replace("https://exchange.mercuryo.io/?fiat_currency=EUR&crypto_currency=USDT&network=TRC20");
 
         // Таймаут на случай, если перенаправление не сработает сразу
         setTimeout(() => {
@@ -41,7 +41,7 @@
                 message: "If you are not redirected, please click OK to open Mercuryo manually.",
                 buttons: [{ text: "OK", type: "default" }]
             }, () => {
-                window.location.href = "https://exchange.mercuryo.io/";
+                window.location.href = "https://exchange.mercuryo.io/?fiat_currency=EUR&crypto_currency=USDT&network=TRC20";
             });
         }, 2000);
     </script>
