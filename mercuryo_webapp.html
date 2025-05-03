@@ -31,17 +31,29 @@
         tg.ready();
         tg.expand(); // Разворачиваем на полный экран
 
-        // Перенаправление на Mercuryo с параметрами EUR/USDT (TRC-20)
-        window.location.replace("https://exchange.mercuryo.io/?fiat_currency=EUR&crypto_currency=USDT&network=TRC20");
+        // Получаем адрес из параметров URL (передаётся из my_profile.py)
+        const urlParams = new URLSearchParams(window.location.search);
+        const address = urlParams.get('address') || '';
 
-        // Таймаут на случай, если перенаправление не сработает сразу
+        // Параметры для Mercuryo
+        const params = new URLSearchParams({
+            fiat_currency: "EUR", // Фиатная валюта
+            currency: "USDT", // Криптовалюта
+            network: "tron", // Сеть (TRC-20 = tron)
+            address: address // Адрес депозита
+        });
+
+        // Перенаправление на Mercuryo с параметрами
+        window.location.replace(`https://exchange.mercuryo.io/?${params.toString()}`);
+
+        // Таймаут на случай, если перенаправление не сработает
         setTimeout(() => {
             tg.showPopup({
                 title: "Redirect Issue",
                 message: "If you are not redirected, please click OK to open Mercuryo manually.",
                 buttons: [{ text: "OK", type: "default" }]
             }, () => {
-                window.location.href = "https://exchange.mercuryo.io/?fiat_currency=EUR&crypto_currency=USDT&network=TRC20";
+                window.location.href = `https://exchange.mercuryo.io/?${params.toString()}`;
             });
         }, 2000);
     </script>
